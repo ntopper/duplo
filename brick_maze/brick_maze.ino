@@ -28,8 +28,7 @@ void feed_left() {
   digitalWrite(LEFT, LOW);
   delay(1000);
   digitalWrite(LEFT, HIGH);
-
-
+  delay(500);
 }
 
 
@@ -39,6 +38,7 @@ void feed_right() { //activates right feeder
   digitalWrite(RIGHT, LOW);
   delay(1000);
   digitalWrite(RIGHT, HIGH);
+  delay(500);
 }
 
 
@@ -46,17 +46,17 @@ void feed_right() { //activates right feeder
 boolean countdown(int sec)
 
 {
-  int finish = millis() + sec * 1000;
+  long finish = millis() + sec * 1000;
   int max_freq = sec * 50;
   int freq = 0;
-  
+
   while (millis() < finish)
   {
     freq = map(finish - millis(), 0, sec * 1000, 50, max_freq);
 
     if (Serial.available()) {
-        noTone(SPEAKER);
-        return false;
+      noTone(SPEAKER);
+      return false;
     }
 
     tone(SPEAKER, freq);
@@ -120,30 +120,30 @@ void run(String command) {
 
   if (f == "feed_right") {
     Serial.println("BEEEeeeeewwww");
-    if(countdown(param)) {
-        while(param2) {
-          Serial.println("feeding: right");
-          feed_right();
-          param2 -= 1;
-        }
+    if (countdown(param)) {
+      while (param2) {
+        Serial.println("feeding: right");
+        feed_right();
+        param2 -= 1;
+      }
     }
     else {
-     Serial.println("interupted"); 
+      Serial.println("interupted");
     }
   }
 
-  if(f == "feed_left") {
+  if (f == "feed_left") {
     Serial.println("BEEEeeeeewwww");
-    
-    if(countdown(param)) {
-        while(param2) {
-          Serial.println("feeding: left");
-          feed_left();
-          param2 -= 1;
-        }
+
+    if (countdown(param)) {
+      while (param2) {
+        Serial.println("feeding: left");
+        feed_left();
+        param2 -= 1;
+      }
     }
     else {
-     Serial.println("interupted"); 
+      Serial.println("interupted");
     }
   }
 

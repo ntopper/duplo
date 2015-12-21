@@ -8,7 +8,8 @@ import time
 parser = argparse.ArgumentParser()
 parser.add_argument('-ll', dest="ll_side", default="left")
 parser.add_argument('-delay', dest="base_delay", default=1)
-parser.add_argument('-reward', dest="base_reward", default=2)
+parser.add_argument('-ll_reward', dest="ll_reward", default=2)
+parser.add_argument('-ss_reward', dest="ss_reward", default=1)
 
 args = parser.parse_args()
 
@@ -17,7 +18,8 @@ if ll_side == "right": ss_side = "left"
 else: ss_side = "right"
 
 base_delay = args.base_delay
-base_reward = args.base_reward
+ll_reward = args.ll_reward
+ss_reward = args.ss_reward
 
 cv2.namedWindow('', cv2.WINDOW_NORMAL)
 
@@ -64,7 +66,7 @@ def draw(frame, mask):
 
     return frame
 
-ser = serial.Serial('/dev/ttyACM0', 9600, timeout=0)
+ser = serial.Serial('/dev/cu.usbmodem1411', 9600, timeout=0)
 
 REWARD_READY = False
 ll_adder = 0
@@ -83,7 +85,10 @@ def ll():
         countdown_pending = True
         print "LL triggered"
         delay = base_delay + ll_adder
-        ser.write("feed_%s "%(ll) + str(delay))
+
+        command = "feed_%s %s %s\n"%(ll_side, str(delay), str(ll_reward))
+        print "sending: %s"%(command)
+        ser.write(command)
 
         countdown_end = time.time() + delay
 
@@ -100,8 +105,11 @@ def ss():
         countdown_pending = True
 
         print "SS triggered"
-        ll_adder = max(0, ll_adder - 1)
-        ser.write("feed_%s "%(ss) + str(base_delay))
+        
+        command = "feed_%s %s %s\n"%(ss_side, str(base_delay), str(ss_reward))
+        print "sending: %s"%(command)
+        ser.write(command)
+
         countdown_end = time.time() + base_delay
 
 def c():
@@ -164,7 +172,7 @@ if __name__ == "__main__":
         #make list of Region objects from config file
         regions = [Region(l) for l in f.readlines()]
 
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(1)
     fgbg = cv2.BackgroundSubtractorMOG()
 
     #warm up the camera
