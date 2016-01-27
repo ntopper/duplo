@@ -7,9 +7,12 @@ import time
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-ll', dest="ll_side", default="left")
-parser.add_argument('-delay', dest="base_delay", default=1)
+parser.add_argument('-ss_delay', dest="ss_delay", default=1)
+parser.add_argument('-ll_delay', dest="ll_delay", default=1)
 parser.add_argument('-ll_reward', dest="ll_reward", default=2)
 parser.add_argument('-ss_reward', dest="ss_reward", default=1)
+parser.add_argument('-port', dest="port", default="COM1")
+
 
 args = parser.parse_args()
 
@@ -17,7 +20,8 @@ ll_side = args.ll_side
 if ll_side == "right": ss_side = "left"
 else: ss_side = "right"
 
-base_delay = args.base_delay
+ss_delay = int(args.ss_delay)
+ll_delay = int(args.ll_delay)
 ll_reward = args.ll_reward
 ss_reward = args.ss_reward
 
@@ -66,13 +70,16 @@ def draw(frame, mask):
 
     return frame
 
-ser = serial.Serial('/dev/cu.usbmodem1411', 9600, timeout=0)
+ser = serial.Serial(args.port, 9600, timeout=0)
 
 REWARD_READY = False
 ll_adder = 0
 
 countdown_end = 0
 countdown_pending = False
+counter_ss = 0
+counter_ll= 0
+
 def ll():
         global REWARD_READY
         global countdown_pending
@@ -84,7 +91,7 @@ def ll():
         REWARD_READY = False
         countdown_pending = True
         print "LL triggered"
-        delay = base_delay + ll_adder
+        delay = ll_delay + ll_adder
 
         command = "feed_%s %s %s\n"%(ll_side, str(delay), str(ll_reward))
         print "sending: %s"%(command)
@@ -97,7 +104,7 @@ def ss():
         global countdown_pending
         global ll_adder
         global countdown_end
-
+        
         if not REWARD_READY:
                 return
 
@@ -106,24 +113,28 @@ def ss():
 
         print "SS triggered"
         
-        command = "feed_%s %s %s\n"%(ss_side, str(base_delay), str(ss_reward))
+        command = "feed_%s %s %s\n"%(ss_side, str(ss_delay), str(ss_reward))
         print "sending: %s"%(command)
         ser.write(command)
 
-        countdown_end = time.time() + base_delay
+        countdown_end = time.time() + ss_delay
 
 def c():
         global REWARD_READY
 
         if not REWARD_READY:
                 print "new run"
-                print "next ll delay: %s seconds"%(str(base_delay + ll_adder))
+                print "next ll delay: %s seconds"%(str(ll_delay + ll_adder))
+                
 
         REWARD_READY = True
 
 def ll_end():
         global ll_adder
         global countdown_pending
+        global counter_ll
+
+        REWARD_READY = False
 
         if not countdown_pending:
             return
@@ -133,14 +144,19 @@ def ll_end():
         if time.time() > countdown_end:
                 ll_adder += 1
                 print "ll reward successfull"
+                counter_ll += 1
+                print "Completed Loops LL: %s"%(counter_ll)
         else:
             print "ll reward interupted"
-        print "next ll delay: %s seconds"%(str(base_delay + ll_adder))
+        print "next ll delay: %s seconds"%(str(ll_delay + ll_adder))
 
 def ss_end():
 
         global ll_adder
         global countdown_pending
+        global counter_ss
+
+        REWARD_READY = False
 
         if not countdown_pending:
                 return
@@ -148,11 +164,15 @@ def ss_end():
 
         ser.write('\n')
         if time.time() > countdown_end:
-                ll_adder = max(0, ll_adder - 1)
+                ll_adder += -1
+                if (ll_adder*-1) == ll_delay:
+                    ll_adder += 1                   
                 print "ss reward successfull"
+                counter_ss += 1
+                print "Completed Loops SS: %s"%(counter_ss)
         else:
             print "ss reward interupted"
-        print "next ll delay: %s seconds"%(str(base_delay + ll_adder))
+        print "next ll delay: %s seconds"%(str(ll_delay + ll_adder))
 
 #callback functions
 callback = {ll_side: ll,
@@ -172,8 +192,8 @@ if __name__ == "__main__":
         #make list of Region objects from config file
         regions = [Region(l) for l in f.readlines()]
 
-    cap = cv2.VideoCapture(1)
-    fgbg = cv2.BackgroundSubtractorMOG()
+    cap = cv2.VideoCapture(0)
+    fgbg = cv2.BackgroundSubtractorMOG2()
 
     #warm up the camera
     for i in xrange(60):
@@ -181,8 +201,11 @@ if __name__ == "__main__":
 
     while(True):
 
+        try:
             # Capture frame-by-frame
             ret, frame = cap.read()
+            if not ret:
+                break
 
             #greyscale version of image
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -202,8 +225,12 @@ if __name__ == "__main__":
 
             # Display the resulting frame
             cv2.imshow('', frame)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
+
+            if cv2.waitKey(30) & 0xFF == ord('q'):
                 break
+
+        except Exception, e:
+            print e
 
     # When everything done, release the capture
     cap.release()
