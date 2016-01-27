@@ -5,6 +5,19 @@ import cv2
 import serial
 import time
 
+def timestr():
+    return time.strftime("%Y%m%d-%H%M%S")
+
+#outfile names
+now = timestr()
+logfile = now + "-log.txt"
+vidfile = now + ".avi"
+
+def log(s, logfile):
+    print s
+    with open(logfile, 'a+') as f:
+        f.write(s + '\n')
+
 parser = argparse.ArgumentParser()
 parser.add_argument('-ll', dest="ll_side", default="left")
 parser.add_argument('-ss_delay', dest="ss_delay", default=1)
@@ -89,11 +102,11 @@ def ll():
                 return
         REWARD_READY = False
         countdown_pending = True
-        print "LL triggered"
+        log("LL triggered")
         delay = ll_delay + ll_adder
 
         command = "feed_%s %s %s\n"%(ll_side, str(delay), str(ll_reward))
-        print "sending: %s"%(command)
+        log("sending: %s"%(command))
         ser.write(command)
 
         countdown_end = time.time() + delay
@@ -110,10 +123,10 @@ def ss():
         REWARD_READY = False
         countdown_pending = True
 
-        print "SS triggered"
+        log("SS triggered")
 
         command = "feed_%s %s %s\n"%(ss_side, str(ss_delay), str(ss_reward))
-        print "sending: %s"%(command)
+        log("sending: %s"%(command))
         ser.write(command)
 
         countdown_end = time.time() + ss_delay
@@ -122,8 +135,8 @@ def c():
         global REWARD_READY
 
         if not REWARD_READY:
-                print "new run"
-                print "next ll delay: %s seconds"%(str(ll_delay + ll_adder))
+                log("new run")
+                log("next ll delay: %s seconds"%(str(ll_delay + ll_adder)))
 
         REWARD_READY = True
 
@@ -141,12 +154,12 @@ def ll_end():
         ser.write('\n')
         if time.time() > countdown_end:
                 ll_adder += 1
-                print "ll reward successfull"
+                log("ll reward successfull")
                 counter_ll += 1
-                print "Completed Loops LL: %s"%(counter_ll)
+                log("Completed Loops LL: %s"%(counter_ll))
         else:
-            print "ll reward interupted"
-        print "next ll delay: %s seconds"%(str(ll_delay + ll_adder))
+            log("ll reward interupted")
+        log("next ll delay: %s seconds"%(str(ll_delay + ll_adder)))
 
 def ss_end():
         global ll_adder
@@ -165,12 +178,12 @@ def ss_end():
                 #ll_delay + ll_adder is always > 1
                 ll_adder = max(-(ll_delay - 1), ll_adder - 1)
 
-                print "ss reward successfull"
+                log("ss reward successfull")
                 counter_ss += 1
-                print "Completed Loops SS: %s"%(counter_ss)
+                log("Completed Loops SS: %s"%(counter_ss))
         else:
-            print "ss reward interupted"
-        print "next ll delay: %s seconds"%(str(ll_delay + ll_adder))
+            log("ss reward interupted")
+        log("next ll delay: %s seconds"%(str(ll_delay + ll_adder)))
 
 #callback functions
 callback = {ll_side: ll,
@@ -228,7 +241,7 @@ if __name__ == "__main__":
                 break
 
         except Exception, e:
-            print e
+            log(e)
 
     # When everything done, release the capture
     cap.release()
