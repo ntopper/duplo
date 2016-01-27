@@ -7,7 +7,7 @@ import time
 
 
 def timestr():
-    return time.strftime("%Y%m%d-%H%M%S")
+    return time.strftime("%m_%d-%H-%M-%S")
 
 # outfile names
 now = timestr()
@@ -18,7 +18,7 @@ vidfile = now + ".avi"
 def log(s):
     print s
     with open(logfile, 'a+') as f:
-        f.write(s + '\n')
+        f.write(timestr() + ": " + s + '\n')
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-ll', dest="ll_side", default="left")
@@ -89,11 +89,11 @@ def draw(frame, mask):
 
     # data overlay
     cv2.putText(frame, "Total Completed Loops SS: %s" % (counter_ss), (5, 10),
-                cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0))
-    cv2.putText(frame, "Total Completed Loops ll: %s" % (counter_ll), (5, 15),
-                cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0))
-    cv2.putText(frame, "Total Pellets Dispensed: %s" % (pellet_count), (5, 20),
-                cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0))
+                cv2.FONT_HERSHEY_SIMPLEX, .3, (0, 255, 0))
+    cv2.putText(frame, "Total Completed Loops ll: %s" % (counter_ll), (5, 20),
+                cv2.FONT_HERSHEY_SIMPLEX, .3, (0, 255, 0))
+    cv2.putText(frame, "Total Pellets Dispensed: %s" % (pellet_count), (5, 30),
+                cv2.FONT_HERSHEY_SIMPLEX, .3, (0, 255, 0))
 
     return frame
 
