@@ -13,7 +13,6 @@ parser.add_argument('-ll_reward', dest="ll_reward", default=2)
 parser.add_argument('-ss_reward', dest="ss_reward", default=1)
 parser.add_argument('-port', dest="port", default="COM1")
 
-
 args = parser.parse_args()
 
 ll_side = args.ll_side
@@ -104,7 +103,7 @@ def ss():
         global countdown_pending
         global ll_adder
         global countdown_end
-        
+
         if not REWARD_READY:
                 return
 
@@ -112,7 +111,7 @@ def ss():
         countdown_pending = True
 
         print "SS triggered"
-        
+
         command = "feed_%s %s %s\n"%(ss_side, str(ss_delay), str(ss_reward))
         print "sending: %s"%(command)
         ser.write(command)
@@ -125,7 +124,6 @@ def c():
         if not REWARD_READY:
                 print "new run"
                 print "next ll delay: %s seconds"%(str(ll_delay + ll_adder))
-                
 
         REWARD_READY = True
 
@@ -151,7 +149,6 @@ def ll_end():
         print "next ll delay: %s seconds"%(str(ll_delay + ll_adder))
 
 def ss_end():
-
         global ll_adder
         global countdown_pending
         global counter_ss
@@ -164,9 +161,10 @@ def ss_end():
 
         ser.write('\n')
         if time.time() > countdown_end:
-                ll_adder += -1
-                if (ll_adder*-1) == ll_delay:
-                    ll_adder += 1                   
+
+                #ll_delay + ll_adder is always > 1
+                ll_adder = max(-(ll_delay - 1), ll_adder - 1)
+
                 print "ss reward successfull"
                 counter_ss += 1
                 print "Completed Loops SS: %s"%(counter_ss)
