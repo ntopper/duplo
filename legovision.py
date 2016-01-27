@@ -13,7 +13,7 @@ now = timestr()
 logfile = now + "-log.txt"
 vidfile = now + ".avi"
 
-def log(s, logfile):
+def log(s):
     print s
     with open(logfile, 'a+') as f:
         f.write(s + '\n')
@@ -89,8 +89,10 @@ ll_adder = 0
 
 countdown_end = 0
 countdown_pending = False
+
 counter_ss = 0
 counter_ll= 0
+pellet_count = 0
 
 def ll():
         global REWARD_READY
@@ -144,6 +146,7 @@ def ll_end():
         global ll_adder
         global countdown_pending
         global counter_ll
+        global pellet_count
 
         REWARD_READY = False
 
@@ -154,9 +157,12 @@ def ll_end():
         ser.write('\n')
         if time.time() > countdown_end:
                 ll_adder += 1
+                pellet_count += int(ll_reward)
+
                 log("ll reward successfull")
                 counter_ll += 1
                 log("Completed Loops LL: %s"%(counter_ll))
+                log("Pellets Dispensed: %s"%(pellet_count))
         else:
             log("ll reward interupted")
         log("next ll delay: %s seconds"%(str(ll_delay + ll_adder)))
@@ -165,6 +171,7 @@ def ss_end():
         global ll_adder
         global countdown_pending
         global counter_ss
+        global pellet_count
 
         REWARD_READY = False
 
@@ -177,10 +184,12 @@ def ss_end():
 
                 #ll_delay + ll_adder is always > 1
                 ll_adder = max(-(ll_delay - 1), ll_adder - 1)
+                pellet_count += int(ss_reward)
 
                 log("ss reward successfull")
                 counter_ss += 1
                 log("Completed Loops SS: %s"%(counter_ss))
+                log("Pellets Dispensed: %s"%(pellet_count))
         else:
             log("ss reward interupted")
         log("next ll delay: %s seconds"%(str(ll_delay + ll_adder)))
@@ -245,11 +254,16 @@ if __name__ == "__main__":
             # Display the resulting frame
             cv2.imshow('', frame)
 
-            if cv2.waitKey(30) & 0xFF == ord('q'):
+            #trial ends at 200 pellets dispensed
+            if cv2.waitKey(30) & 0xFF == ord('q') or pellet_count >= 200:
                 break
 
         except Exception, e:
             log(e)
+
+    log("Total Completed Loops SS: %s"%(counter_ss))
+    log("Total Completed Loops LL: %s"%(counter_ss))
+    log("Total Pellets Dispensed: %s"%(pellet_count))
 
     # When everything done, release erthing
     cap.release()
