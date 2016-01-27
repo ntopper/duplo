@@ -198,6 +198,10 @@ regions = []
 
 if __name__ == "__main__":
 
+    # Define the codec and create VideoWriter object
+    fourcc = cv2.cv.CV_FOURCC('X','V','I','D')
+    out = cv2.VideoWriter(vidfile,fourcc, 18.0, (640,480))
+
     #get read config
     with open("config", 'r') as f:
         #make list of Region objects from config file
@@ -215,6 +219,7 @@ if __name__ == "__main__":
         try:
             # Capture frame-by-frame
             ret, frame = cap.read()
+
             if not ret:
                 break
 
@@ -234,6 +239,9 @@ if __name__ == "__main__":
             #draw overlays
             draw(frame, fgmask)
 
+            #save this frame
+            out.write(frame)
+
             # Display the resulting frame
             cv2.imshow('', frame)
 
@@ -243,6 +251,7 @@ if __name__ == "__main__":
         except Exception, e:
             log(e)
 
-    # When everything done, release the capture
+    # When everything done, release erthing
     cap.release()
+    out.release()
     cv2.destroyAllWindows()
