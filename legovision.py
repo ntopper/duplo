@@ -228,8 +228,8 @@ regions = []
 if __name__ == "__main__":
 
     # Define the codec and create VideoWriter object
-    fourcc = cv2.cv.CV_FOURCC('X', 'V', 'I', 'D')
-    out = cv2.VideoWriter(vidfile, fourcc, 18.0, (640, 480))
+    fourcc = -1
+    out = cv2.VideoWriter(vidfile, fourcc, 18.0, (400, 300))
 
     # get read config
     with open("config", 'r') as f:
