@@ -2,6 +2,7 @@ int SPEAKER = 10;
 int LEFT = 8;
 int RIGHT = 9;
 
+int mode = 0;
 
 String inputString = "";         // a string to hold incoming data
 boolean stringComplete = false;  // whether the string is complete
@@ -43,16 +44,26 @@ void feed_right() { //activates right feeder
 
 
 //Intiates countdown with related frequency
-boolean countdown(int sec)
+boolean countdown(unsigned int sec)
 
 {
   long finish = millis() + sec * 1000;
-  int max_freq = sec * 50;
-  int freq = 0;
+  unsigned int freq = 0;
 
   while (millis() < finish)
   {
-    freq = map(finish - millis(), 0, sec * 1000, 50, max_freq);
+    switch(mode) {
+      
+      case 0:
+        freq = sweep50(finish-millis(), sec);
+        break;
+      case 1:
+        freq = sweep250(finish-millis(), sec);
+        break;
+      case 2:
+        freq = step250(finish-millis(), sec);
+        break;
+    }
 
     if (Serial.available()) {
       noTone(SPEAKER);
@@ -63,6 +74,18 @@ boolean countdown(int sec)
   }
   noTone(SPEAKER);
   return true;
+}
+
+unsigned int sweep250(unsigned int t, unsigned int n) {
+ return (t / 1000.0) * 250 + 1000;
+}
+
+unsigned int step250 (unsigned int t, unsigned int n){
+ return (t / 1000) * 250 + 1000;
+}
+
+unsigned int sweep50(unsigned int t, unsigned int n) {
+ return map(t,  0, n * 1000, 50, n * 50);
 }
 
 void loop()
@@ -107,8 +130,6 @@ String getValue(String data, char separator, int index) {
   return found > index ? data.substring(strIndex[0], strIndex[1]) : "";
 }
 
-
-
 void run(String command) {
 
   // isolate function
@@ -146,5 +167,8 @@ void run(String command) {
       Serial.println("interupted");
     }
   }
-
+  
+  if (f == "set_mode") {
+   mode = param; 
+  }
 }

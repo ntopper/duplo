@@ -14,7 +14,6 @@ now = timestr()
 logfile = now + "-log.txt"
 vidfile = now + ".avi"
 
-
 def log(s):
     print s
     with open(logfile, 'a+') as f:
@@ -27,6 +26,7 @@ parser.add_argument('-ll_delay', dest="ll_delay", default=1)
 parser.add_argument('-ll_reward', dest="ll_reward", default=2)
 parser.add_argument('-ss_reward', dest="ss_reward", default=1)
 parser.add_argument('-port', dest="port", default="COM1")
+parser.add_argument('-bleep_mode', dest="mode", default="0")
 
 args = parser.parse_args()
 
@@ -109,6 +109,7 @@ counter_ss = 0
 counter_ll = 0
 pellet_count = 0
 
+ser.write("set_mode %s" % args.mode)
 
 def ll():
     global REWARD_READY
@@ -228,7 +229,7 @@ regions = []
 if __name__ == "__main__":
 
     # Define the codec and create VideoWriter object
-    fourcc = cv2.cv.CV_FOURCC('X', 'V', 'I', 'D')
+    fourcc = -1
     out = cv2.VideoWriter(vidfile, fourcc, 18.0, (640, 480))
 
     # get read config
