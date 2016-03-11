@@ -4,6 +4,7 @@ import numpy
 import cv2
 import serial
 import time
+import traceback
 
 def timestr():
     return time.strftime("%m_%d-%H-%M-%S")
@@ -229,6 +230,7 @@ if __name__ == "__main__":
 
     # Define the codec and create VideoWriter object
     fourcc = -1
+    out = cv2.VideoWriter(vidfile, fourcc, 18.0, (640, 480))
 
     # get read config
     with open("config", 'r') as f:
@@ -278,7 +280,8 @@ if __name__ == "__main__":
                 break
 
         except Exception, e:
-            log(e)
+            log(str(e))
+            traceback.print_exc()
 
     log("Total Completed Loops SS: %s" % (counter_ss))
     log("Total Completed Loops LL: %s" % (counter_ss))
