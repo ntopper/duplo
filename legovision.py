@@ -26,7 +26,7 @@ parser.add_argument('-ll_delay', dest="ll_delay", default=1)
 parser.add_argument('-ll_reward', dest="ll_reward", default=2)
 parser.add_argument('-ss_reward', dest="ss_reward", default=1)
 parser.add_argument('-port', dest="port", default="COM1")
-parser.add_argument('-bleep_mode', dest="mode", default="0")
+parser.add_argument('-bleep_mode', dest="mode", default=0)
 
 args = parser.parse_args()
 
@@ -97,7 +97,7 @@ def draw(frame, mask):
 
     return frame
 
-ser = serial.Serial(args.port, 9600, timeout=0)
+ser = serial.Serial(args.port, 9600)
 
 REWARD_READY = False
 ll_adder = 0
@@ -108,8 +108,6 @@ countdown_pending = False
 counter_ss = 0
 counter_ll = 0
 pellet_count = 0
-
-ser.write("set_mode %s" % args.mode)
 
 def ll():
     global REWARD_READY
@@ -236,6 +234,8 @@ if __name__ == "__main__":
     with open("config", 'r') as f:
         # make list of Region objects from config file
         regions = [Region(l) for l in f.readlines()]
+
+    ser.write("set_mode %s\n" % str(args.mode))
 
     cap = cv2.VideoCapture(0)
     fgbg = cv2.BackgroundSubtractorMOG2()
